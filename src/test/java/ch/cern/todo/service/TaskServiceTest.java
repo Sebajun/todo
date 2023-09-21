@@ -53,7 +53,7 @@ class TaskServiceTest {
     }
 
     @Test
-    void cannotCreteTaskWithoutCategory() throws Exception {
+    void cannotCreateTaskWithoutCategory() throws Exception {
         assertThrows(CategoryNotFoundException.class, ()->taskService.save(TaskName, TaskDescription, new Date(), null));
     }
 
