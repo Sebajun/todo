@@ -2,10 +2,9 @@ package ch.cern.todo.controller;
 
 import ch.cern.todo.model.TaskCategory;
 import ch.cern.todo.service.TaskCategoryService;
+import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/task-category")
@@ -41,7 +40,7 @@ public class TaskCategoryController {
     }
 
     @DeleteMapping("{id}")
-    public void deleteTask(@PathVariable int id) {
+    public void deleteTaskCategory(@PathVariable int id) {
         taskCategoryService.deleteById(id);
     }
 }

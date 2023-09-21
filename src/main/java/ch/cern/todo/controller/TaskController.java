@@ -1,14 +1,13 @@
 package ch.cern.todo.controller;
 
+import ch.cern.todo.exception.CategoryNotFoundException;
 import ch.cern.todo.model.Task;
 import ch.cern.todo.service.TaskService;
+import java.util.Date;
+import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("api/task")
@@ -26,7 +25,7 @@ public class TaskController {
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<Task> getTask(@PathVariable(required = true) int id) {
+    public ResponseEntity<Task> getTask(@PathVariable int id) {
         return taskService
                 .findById(id)
                 .map(ResponseEntity::ok)
@@ -38,7 +37,11 @@ public class TaskController {
                                            @RequestParam String description,
                                            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date deadline,
                                            @RequestParam String categoryName) {
-        return ResponseEntity.of(Optional.ofNullable(taskService.save(name, description, deadline, categoryName)));
+        try {
+            return ResponseEntity.ok(taskService.save(name, description, deadline, categoryName));
+        } catch (CategoryNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping

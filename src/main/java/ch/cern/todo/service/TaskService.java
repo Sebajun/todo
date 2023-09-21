@@ -1,13 +1,13 @@
 package ch.cern.todo.service;
 
+import ch.cern.todo.exception.CategoryNotFoundException;
 import ch.cern.todo.model.Task;
 import ch.cern.todo.model.TaskCategory;
 import ch.cern.todo.repository.TaskRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.stereotype.Service;
 
 @Service
 public class TaskService {
@@ -29,26 +29,11 @@ public class TaskService {
         return taskRepository.findAll();
     }
 
-    public Task save(String taskName, String taskDescription, Date deadline, String categoryName) {
-        return taskCategoryService.findByName(categoryName)
+    public Task save(String taskName, String taskDescription, Date deadline, String categoryName) throws CategoryNotFoundException {
+        Optional<TaskCategory> category = taskCategoryService.findByName(categoryName);
+        return category
                 .map(taskCategory -> taskRepository.save(new Task(taskName, taskDescription, deadline, taskCategory)))
-                .orElse(null);
-    }
-
-    public Task save(String taskName, String taskDescription, Date deadline, int categoryId) {
-        return taskCategoryService.findById(categoryId)
-                .map(taskCategory -> taskRepository.save(new Task(taskName, taskDescription, deadline, taskCategory)))
-                .orElse(null);
-    }
-
-    public Task save(final String taskName, final String taskDescription, final Date deadline, TaskCategory category) {
-        return taskCategoryService.findById(category.getId())
-                .map(taskCategory -> taskRepository.save(new Task(taskName, taskDescription, deadline, taskCategory)))
-                .orElseGet(() -> {
-                    TaskCategory newCategory = taskCategoryService.save(
-                            new TaskCategory(category.getCategoryName(), category.getCategoryDescription()));
-                    return taskRepository.save(new Task(taskName, taskDescription, deadline, newCategory));
-                });
+                .orElseThrow(()-> new CategoryNotFoundException());
     }
 
     public Task update(Task task) {

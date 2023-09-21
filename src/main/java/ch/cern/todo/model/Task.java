@@ -22,7 +22,7 @@ public class Task {
 
     @NotNull
     @Length(max = 100)
-    @Column(name = "task_name")
+    @Column(name = "task_name", unique = true)
     private String taskName;
 
     @Length(max = 200)

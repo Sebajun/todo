@@ -1,18 +1,18 @@
 package ch.cern.todo.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+
+import ch.cern.todo.exception.CategoryNotFoundException;
 import ch.cern.todo.model.Task;
 import ch.cern.todo.model.TaskCategory;
 import ch.cern.todo.repository.TaskCategoryRepository;
 import ch.cern.todo.repository.TaskRepository;
+import java.util.Date;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-
-import java.util.Date;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class TaskServiceTest {
@@ -38,25 +38,11 @@ class TaskServiceTest {
         taskCategoryRepository.deleteAll();
     }
 
-
     @Test
-    void canCreateTaskWithNotExistingCategory() {
-        TaskCategory taskCategory = new TaskCategory(TaskCategoryName, TaskCategoryDescription);
-        taskService.save(TaskName, TaskDescription, new Date(), taskCategory);
-        Task foundTask = taskService.findAll().get(0);
-        assertAll(
-                () -> assertEquals(TaskCategoryName, foundTask.getTaskCategory().getCategoryName()),
-                () -> assertEquals(TaskCategoryDescription, foundTask.getTaskCategory().getCategoryDescription()),
-                () -> assertEquals(TaskName, foundTask.getTaskName()),
-                () -> assertEquals(TaskDescription, foundTask.getTaskDescription())
-        );
-    }
-
-    @Test
-    void canCreateTaskWithExistingCategory() {
+    void canCreateTaskWithExistingCategory() throws Exception{
         TaskCategory category = taskCategoryService.save(new TaskCategory(TaskCategoryName, TaskCategoryDescription));
         taskCategoryRepository.save(category);
-        taskService.save(TaskName, TaskDescription, new Date(), category);
+        taskService.save(TaskName, TaskDescription, new Date(), category.getCategoryName());
         Task foundTask = taskService.findAll().get(0);
         assertAll(
                 () -> assertEquals(TaskCategoryName, foundTask.getTaskCategory().getCategoryName()),
@@ -67,9 +53,15 @@ class TaskServiceTest {
     }
 
     @Test
-    void successfulUpdateCase() {
+    void cannotCreteTaskWithoutCategory() throws Exception {
+        assertThrows(CategoryNotFoundException.class, ()->taskService.save(TaskName, TaskDescription, new Date(), null));
+    }
+
+    @Test
+    void successfulUpdateCase() throws Exception{
         TaskCategory category = taskCategoryService.save(new TaskCategory(TaskCategoryName, TaskCategoryDescription));
-        Task saved = taskService.save(TaskName, TaskDescription, new Date(), category);
+        taskCategoryRepository.save(category);
+        Task saved = taskService.save(TaskName, TaskDescription, new Date(), category.getCategoryName());
 
         saved.setTaskName("updated");
         saved.setTaskDescription("updated");
@@ -84,10 +76,12 @@ class TaskServiceTest {
     }
 
     @Test
-    void shouldNotAddTaskIfAlreadyInCategory() {
+    void shouldNotAddTaskIfAlreadyInCategory() throws Exception{
         TaskCategory taskCategory = new TaskCategory(TaskCategoryName, TaskCategoryDescription);
-        taskService.save(TaskName, TaskDescription, new Date(), taskCategory);
-        assertThrows(Exception.class, () -> taskService.save(TaskName, TaskDescription, new Date(), taskCategory));
+        taskCategoryRepository.save(taskCategory);
+        taskService.save(TaskName, TaskDescription, new Date(), taskCategory.getCategoryName());
+        assertThrows(Exception.class,
+                ()-> taskService.save(TaskName, TaskDescription, new Date(), taskCategory.getCategoryName()));
     }
 
 }
